@@ -8,4 +8,5 @@ type Task struct {
 	Description string    `db:"description"`
 	CreatedAt   time.Time `db:"created_at"`
 	Completed   bool      `db:"completed"`
+	UserId      int64     `db:"user_id"`
 }

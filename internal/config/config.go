@@ -20,6 +20,7 @@ func Load() (*Config, error) {
 	cfg.DBPassword = os.Getenv("DB_PASSWORD")
 	cfg.DBName = os.Getenv("DB_NAME")
 	cfg.SSLMode = os.Getenv("SSL_MODE")
+	cfg.SIGNATION = os.Getenv("SIGNATION")
 	return &cfg, nil
 }
 
@@ -30,4 +31,5 @@ type Config struct {
 	DBPassword string
 	DBName     string
 	SSLMode    string
+	SIGNATION  string
 }

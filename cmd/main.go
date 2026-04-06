@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"tasks-manager/internal/config"
 	"tasks-manager/internal/database"
 	"tasks-manager/internal/handler"
+	"tasks-manager/internal/middleware"
 	"tasks-manager/internal/repository"
 	"tasks-manager/internal/service"
 
@@ -22,9 +22,10 @@ func main() {
 	db := database.NewPostgres(cfg)
 	if err = db.Ping(); err != nil {
 		log.Println("Problem in getting answer from database")
-	} else {
-		fmt.Println("Krasava x2")
 	}
+
+	sqlDB := db.DB
+	database.RunMigrations(sqlDB)
 
 	// err = repo.Delete(1)
 	// if err != nil {
@@ -68,15 +69,27 @@ func main() {
 
 	r := gin.Default()
 
-	repository := repository.NewRepository(db)
-	service := service.NewService(repository)
-	handler := handler.NewHandler(service)
+	taskRepository := repository.NewRepository(db)
+	taskService := service.NewService(taskRepository)
+	taskHandler := handler.NewHandler(taskService)
 
-	r.POST("/tasks", handler.Create)
-	r.GET("/tasks", handler.GetAll)
-	r.GET("/tasks/:id", handler.GetById)
-	r.PUT("/tasks/:id", handler.Update)
-	r.DELETE("/tasks/:id", handler.Delete)
+	userRepository := repository.NewUserRepository(db)
+	userService := service.NewUserService(userRepository)
+	userHandler := handler.NewUserHandler(userService)
+
+	r.POST("/register", userHandler.Register)
+	r.POST("/login", userHandler.Login)
+	r.GET("/user/username/:username", userHandler.GetByUsername)
+	r.GET("/user/id/:id", userHandler.GetById)
+	r.PUT("/user/:id", userHandler.Update)
+	r.DELETE("/user/:id", userHandler.Delete)
+	tasks := r.Group("/tasks")
+	tasks.Use(middleware.AuthMiddleware())
+	tasks.POST("/", taskHandler.Create)
+	tasks.GET("/", taskHandler.GetAll)
+	tasks.GET("/:id", taskHandler.GetById)
+	tasks.PUT("/:id", taskHandler.Update)
+	tasks.DELETE("/:id", taskHandler.Delete)
 
 	r.Run(":8080")
 }
