@@ -31,6 +31,9 @@ func (t *taskRepository) Create(task *domain.Task) error {
 	return nil
 }
 
+// Название метода обманывает, это не GetById, а GetByTaskAndUserId
+// Отсюда вопрос зачем для получения конкретного таска по id передавать ещё и id юзера?
+// По идее id таска уникально для каждого и его вполне хватит для получения, к тому же поиск станет намного эффективней
 func (t *taskRepository) GetById(id int64, userID int64) (*domain.Task, error) {
 	var task domain.Task
 	err := t.db.Get(&task, "SELECT id, title, description, created_at, completed FROM tasks WHERE id=$1 AND user_id=$2", id, userID)
@@ -49,6 +52,7 @@ func (t *taskRepository) GetAll(userID int64) ([]domain.Task, error) {
 	return tasks, nil
 }
 
+// Тоже самое, зачем тут ID юзера?
 func (t *taskRepository) Update(task *domain.Task, userID int64) error {
 	result, err := t.db.Exec("UPDATE tasks set title=$1, description=$2, completed=$3 WHERE id = $4 AND user_id=$5", task.Title, task.Description, task.Completed, task.ID, userID)
 	if err != nil {
@@ -66,6 +70,7 @@ func (t *taskRepository) Update(task *domain.Task, userID int64) error {
 	return nil
 }
 
+// Тоже самое, зачем тут ID юзера?
 func (t *taskRepository) Delete(id int64, userID int64) error {
 	result, err := t.db.Exec("DELETE FROM tasks WHERE id=$1 AND user_id=$2", id, userID)
 	if err != nil {

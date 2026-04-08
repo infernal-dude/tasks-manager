@@ -19,11 +19,17 @@ func main() {
 	if err != nil {
 		log.Fatal("Problem with getting configs for DataBase")
 	}
+
+	// Для чего этот метод? То что он делает, можно явно сделать здесь и не скрывать ничего.
+	// А для него ещё и целый файл выделился, тоже непонятно зачем. Даже целый пакет!
+	// По хорошему при создании нового пакета нужно написать комментарий для чего он создан. Что написать для пакета database?
+	// К томуже ты в нём уже делаешь Ping(), а тут делает его ещё раз. Так что это лишний раз доказывает бесполезность этого метода.
 	db := database.NewPostgres(cfg)
 	if err = db.Ping(); err != nil {
-		log.Println("Problem in getting answer from database")
+		log.Println("Problem in getting answer from database") // После этого лога приложение не остановится, хотя явно должно. Нужен log.Fatal()
 	}
 
+	// Зачем эта переменная, db.DB можно явно передать
 	sqlDB := db.DB
 	database.RunMigrations(sqlDB)
 
@@ -67,6 +73,7 @@ func main() {
 	// 	fmt.Println(tasks[i])
 	// }
 
+	// Про джин я уже говорил вроде, стоит пользоваться стандартными средствами языка на первых парах
 	r := gin.Default()
 
 	taskRepository := repository.NewRepository(db)
