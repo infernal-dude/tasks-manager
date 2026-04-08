@@ -32,10 +32,13 @@ func NewUserService(repo repository.UserRepository) UserService {
 }
 
 func (u *userService) Register(user *domain.User) error {
+	// Это костыль, хотя должно быть ограничением на уровне БД
+	// Елси у тебя логин происходит с его помощью зачем тебе тогда вообще ID? Можно username сделать первичным ключом
 	_, err := u.repo.GetByUsername(strings.TrimSpace(user.Username))
 	if err == nil {
 		return fmt.Errorf("Username %s already taken!", user.Username)
 	}
+	// Из-за проверки выше ты уже знаешь что ошибка не nil, первая проверка лишняя
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -107,6 +110,9 @@ func (u *userService) GetAll() ([]domain.User, error) {
 }
 
 func (u *userService) Update(user *domain.User) error {
+	// Тоже самое что и выше, это должно быть ограничением базы данных
+	// а смена значения отдельным процессом, а не частью общего обновления инфы о клиенте
+	// Тут ты меняешь базовую инфу, а username и пароль это не инфа о клиенте, а данные для логина
 	userTest, err := u.repo.GetByUsername(user.Username)
 	if err == nil && userTest.ID != user.ID {
 		return fmt.Errorf("busy by another user")

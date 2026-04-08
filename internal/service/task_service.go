@@ -9,6 +9,9 @@ import (
 	"tasks-manager/internal/repository"
 )
 
+// C TaskService и UserService та же картина что и с *Handler.
+// Почему они разделены? Судя по названиям методов и наличию интерфейса это больше походе на репозиторий, чем на инкапсуляцию бизнес логики.
+// Какую роль здесь играет интерфейс? Таск в будущем можно создать как-то подругому? Кажется что это здесь лишнее
 type TaskService interface {
 	Create(task *domain.Task, userID int64) error
 	GetById(id int64, userID int64) (*domain.Task, error)

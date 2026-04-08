@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// Зачем это в отдельном пакете?
 func AuthMiddleware() gin.HandlerFunc {
 	signKey := os.Getenv("SIGNATION")
 
