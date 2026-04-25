@@ -60,6 +60,12 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 		userRole, ok := claims["role"].(string)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"error": "missing role",
+			})
+			return
+		}
 
 		userID := int64(userIDFloat)
 

@@ -35,7 +35,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 func (h *UserHandler) Login(c *gin.Context) {
 	var user domain.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Error in logging"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "error in logging"})
 		return
 	}
 
@@ -123,6 +123,29 @@ func (h *UserHandler) Delete(c *gin.Context) {
 		return
 	}
 
+	userIDValue, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+		return
+	}
+	userID, ok := userIDValue.(int64)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	userRoleValue, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+		return
+	}
+
+	userRole, ok := userRoleValue.(string)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
 	var user domain.User
 	err := c.ShouldBindJSON(&user)
 	if err != nil {
@@ -134,6 +157,13 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ID"})
 		return
+	}
+
+	if id != userID {
+		if userRole != "admin" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "no permission"})
+			return
+		}
 	}
 
 	if _, err := h.service.GetById(id); err != nil {

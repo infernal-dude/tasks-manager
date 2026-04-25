@@ -19,7 +19,7 @@ func NewPostgres(cfg *config.Config) *sqlx.DB {
 	if err = db.Ping(); err != nil {
 		log.Println("Problem in getting answer from database")
 	} else {
-		fmt.Println("Database coneection is succeeded")
+		fmt.Println("Database connection is succeeded")
 	}
 
 	return db

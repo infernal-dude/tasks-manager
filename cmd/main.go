@@ -20,52 +20,7 @@ func main() {
 		log.Fatal("Problem with getting configs for DataBase")
 	}
 	db := database.NewPostgres(cfg)
-	if err = db.Ping(); err != nil {
-		log.Println("Problem in getting answer from database")
-	}
-
-	sqlDB := db.DB
-	database.RunMigrations(sqlDB)
-
-	// err = repo.Delete(1)
-	// if err != nil {
-	// 	fmt.Println("Error in deleting row")
-	// }
-
-	//Обновление записи в базе данных
-	// task := domain.Task{ID: 1, Title: "Играть еще больше в Helldivers 2", Description: "Недостаточно играешь", Completed: false}
-	// err = repo.Update(&task)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-
-	//Добавление нового таска в базу данных
-	// task := &domain.Task{
-	// 	Title:       "Играть",
-	// 	Description: "Helldivers 2",
-	// }
-	// repo.Create(task)
-	// fmt.Println(task)
-
-	//Получение таска по id
-	// task, err := repo.GetById(1)
-	// if err != nil {
-	// 	if err == sql.ErrNoRows {
-	// 		fmt.Println("No such rows")
-	// 	} else {
-	// 		fmt.Printf("Error in getting answer: %s\n", err.Error())
-	// 	}
-	// }
-	// fmt.Println(task)
-
-	//Получение среза всех тасков
-	// tasks, err := repo.GetAll()
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-	// for i := 0; i < len(tasks); i++ {
-	// 	fmt.Println(tasks[i])
-	// }
+	database.RunMigrations(db.DB)
 
 	r := gin.Default()
 
@@ -77,14 +32,16 @@ func main() {
 	userService := service.NewUserService(userRepository)
 	userHandler := handler.NewUserHandler(userService)
 
+	tasks := r.Group("/tasks")
+	users := r.Group("/user")
+	tasks.Use(middleware.AuthMiddleware())
+	users.Use(middleware.AuthMiddleware())
 	r.POST("/register", userHandler.Register)
 	r.POST("/login", userHandler.Login)
 	r.GET("/user/username/:username", userHandler.GetByUsername)
 	r.GET("/user/id/:id", userHandler.GetById)
 	r.PUT("/user/:id", userHandler.Update)
-	r.DELETE("/user/:id", userHandler.Delete)
-	tasks := r.Group("/tasks")
-	tasks.Use(middleware.AuthMiddleware())
+	users.DELETE("/:id", userHandler.Delete)
 	tasks.POST("/", taskHandler.Create)
 	tasks.GET("/", taskHandler.GetAll)
 	tasks.GET("/:id", taskHandler.GetById)
