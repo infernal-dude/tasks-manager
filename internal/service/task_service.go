@@ -11,10 +11,10 @@ import (
 
 type TaskService interface {
 	Create(task *domain.Task, userID int64) error
-	GetById(id int64, userID int64) (*domain.Task, error)
+	GetById(id int64, userID int64, isAdmin bool) (*domain.Task, error)
 	GetAll(userID int64) ([]domain.Task, error)
 	Update(task *domain.Task, userID int64) error
-	Delete(id int64, userID int64) error
+	Delete(id int64, userID int64, isAdmin bool) error
 }
 
 type taskService struct {
@@ -36,8 +36,8 @@ func (s *taskService) Create(task *domain.Task, userID int64) error {
 	return nil
 }
 
-func (s *taskService) GetById(id int64, userID int64) (*domain.Task, error) {
-	return s.repo.GetById(id, userID)
+func (s *taskService) GetById(id int64, userID int64, isAdmin bool) (*domain.Task, error) {
+	return s.repo.GetById(id, userID, isAdmin)
 }
 
 func (s *taskService) GetAll(userID int64) ([]domain.Task, error) {
@@ -55,22 +55,15 @@ func (s *taskService) Update(task *domain.Task, userID int64) error {
 	return nil
 }
 
-func (s *taskService) Delete(id int64, userID int64) error {
-
-	task, err := s.repo.GetById(id, userID)
+func (s *taskService) Delete(id int64, userID int64, isAdmin bool) error {
+	//ЧЕКНИ ПОТОМ ЧЕ БУДЕТ ТО С GETBYID и FALSE ADMIN
+	err := s.repo.Delete(id, userID, isAdmin)
 	if err != nil {
-		return err
-	}
-
-	if task.Completed {
-		return errors.New("Can't delete completed task")
-	}
-
-	if err := s.repo.Delete(id, userID); err != nil {
 		if err == sql.ErrNoRows {
 			return fmt.Errorf("task not found")
 		}
 		return err
 	}
+
 	return nil
 }

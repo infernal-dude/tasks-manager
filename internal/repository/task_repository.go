@@ -9,10 +9,10 @@ import (
 
 type TaskRepository interface {
 	Create(task *domain.Task) error
-	GetById(id int64, userID int64) (*domain.Task, error)
+	GetById(id int64, userID int64, isAdmin bool) (*domain.Task, error)
 	GetAll(userID int64) ([]domain.Task, error)
 	Update(task *domain.Task, userID int64) error
-	Delete(id int64, userID int64) error
+	Delete(id int64, userID int64, isAdmin bool) error
 }
 
 type taskRepository struct {
@@ -31,8 +31,17 @@ func (t *taskRepository) Create(task *domain.Task) error {
 	return nil
 }
 
-func (t *taskRepository) GetById(id int64, userID int64) (*domain.Task, error) {
+func (t *taskRepository) GetById(id int64, userID int64, isAdmin bool) (*domain.Task, error) {
 	var task domain.Task
+
+	if isAdmin {
+		err := t.db.Get(&task, "SELECT id, title, description, created_at, completed FROM tasks WHERE id=$1", id)
+		if err != nil {
+			return nil, err
+		}
+		return &task, nil
+	}
+
 	err := t.db.Get(&task, "SELECT id, title, description, created_at, completed FROM tasks WHERE id=$1 AND user_id=$2", id, userID)
 	if err != nil {
 		return nil, err
@@ -66,7 +75,22 @@ func (t *taskRepository) Update(task *domain.Task, userID int64) error {
 	return nil
 }
 
-func (t *taskRepository) Delete(id int64, userID int64) error {
+func (t *taskRepository) Delete(id int64, userID int64, isAdmin bool) error {
+	if isAdmin {
+		result, err := t.db.Exec("DELETE FROM tasks WHERE id=$1", id)
+		if err != nil {
+			return err
+		}
+		row, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if row == 0 {
+			return sql.ErrNoRows
+		}
+		return nil
+	}
+
 	result, err := t.db.Exec("DELETE FROM tasks WHERE id=$1 AND user_id=$2", id, userID)
 	if err != nil {
 		return err
